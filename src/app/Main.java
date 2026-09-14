@@ -15,6 +15,7 @@ public class Main
     {
         // Fila de espera de solicitações do CRM e Pilha de Operações
         MyQueue<Solicitacao> filaDeEspera = new CircularArrayQueue<>();
+        ArrayStack<Operacao> historico = new ArrayStack<>();
 
         Scanner s = new Scanner(System.in);
         int resp;
