@@ -5,13 +5,17 @@ import java.util.Scanner;
 import estruturas.MyQueue;
 import estruturas.CircularArrayQueue;
 import model.Solicitacao;
+import estruturas.MyStack;
+import estruturas.ArrayStack;
+import model.Operacao;
 
 public class Main
 {
     public static void main(String[] args) throws Exception
     {
-        // Fila de espera de solicitações do CRM
+        // Fila de espera de solicitações do CRM e Pilha de Operações
         MyQueue<Solicitacao> filaDeEspera = new CircularArrayQueue<>();
+
         Scanner s = new Scanner(System.in);
         int resp;
 
@@ -95,13 +99,69 @@ public class Main
                         System.out.println("Não há nenhuma solicitação");
                     else
                         System.out.println("Quantidade de solicitações: " + filaDeEspera.size());
+                    break;
+
                 case 6:
+                    if (historico.isEmpty())
+                        System.out.println("Nenhuma operação foi realizada ainda.");
+                    else
+                        System.out.println("Última operação: " + historico.top());
                     break;
 
                 case 7:
+                    if (historico.isEmpty())
+                        System.out.println("Nenhuma operação registrada até o momento.");
+                    else
+                    {
+                        System.out.println("\n--- Histórico de Operações (LIFO) ---");
+                        MyStack<Operacao> auxiliar = new ArrayStack<>();
+
+                        while (!historico.isEmpty())
+                        {
+                            // 1. Tira do topo, que já sai da mais recente para a mais Operacao op = historico.pop() antiga
+                            // 2. Imprime a operação
+                            System.out.println(op);
+                            auxiliar.push(op);
+                        }
+                        // 3. Guarda na auxiliar para não perder o histórico
+                        while (!auxiliar.isEmpty())
+                            historico.push(auxiliar.pop());
+                    }
                     break;
 
                 case 8:
+                    if (historico.isEmpty())
+                        System.out.println("Não há operação para desfazer.");
+                    else
+                    {
+                        Operacao ultima = historico.pop();
+                        Solicitacao alvo = ultima.getSolicitacao();
+                        if (ultima.getTipo().equals("CADASTRO"))
+                        {
+                        // Refaz a fila sem a solicitação que tinha sido cadastrada
+                            MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>();
+                            int total = filaDeEspera.size();
+                            for (int i = 0; i < total; i++)
+                            {
+                                Solicitacao atual = filaDeEspera.dequeue();
+                                if (atual.getCodigo() != alvo.getCodigo())
+                                    novaFila.enqueue(atual);
+                            }
+                            filaDeEspera = novaFila;
+                            System.out.println("Cadastro da solicitação " + alvo.getCodigo();
+                        }
+                        else
+                        {
+                            // Volta o status e coloca a solicitação na frente da fila alvo.setStatus("AGUARDANDO");
+                            alvo.setResponsavel(null);
+                            MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>();
+                            novaFila.enqueue(alvo);
+                            while (!filaDeEspera.isEmpty())
+                                novaFila.enqueue(filaDeEspera.dequeue());
+                            filaDeEspera = novaFila;
+                            System.out.println("Atendimento da solicitação " + alvo.getCodigo());
+                        }
+                    }
                     break;
 
                 case 0:
