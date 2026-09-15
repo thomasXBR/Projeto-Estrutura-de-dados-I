@@ -149,12 +149,12 @@ public class Main
                                     novaFila.enqueue(atual);
                             }
                             filaDeEspera = novaFila;
-                            System.out.println("Cadastro da solicitação " + alvo.getCodigo();
+                            System.out.println("Cadastro da solicitação " + alvo.getCodigo());
                         }
                         else
                         {
                             // Volta o status e coloca a solicitação na frente da fila alvo.setStatus("AGUARDANDO");
-                            alvo.setResponsavel(null);
+                            alvo.setStatus(null);
                             MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>();
                             novaFila.enqueue(alvo);
                             while (!filaDeEspera.isEmpty())

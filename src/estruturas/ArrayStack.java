@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-package estrturas;
-=======
+
 package estruturas;
->>>>>>> 2761991d0af8238eae4b6f6ee704b8995ad04092
+
 
 public class ArrayStack<E> implements MyStack<E>{
     private E[] elements; //Vetor que armazena os elementos da pilha
@@ -21,11 +19,10 @@ public class ArrayStack<E> implements MyStack<E>{
             throw new IllegalStateException("Pilha Cheia"); //Se estver a pilha está cheia
         }
         topIndex++;
-<<<<<<< HEAD
+
         elements[topIndex] = element; //Coloca o novo elemento na posição indicada 
-=======
+
         elements[topIndex] = element; //Coloca o novo elemento na posição indicada
->>>>>>> 2761991d0af8238eae4b6f6ee704b8995ad04092
     }
 
     @Override
@@ -35,11 +32,7 @@ public class ArrayStack<E> implements MyStack<E>{
         }
         E element = elements[topIndex]; //Guarda o elemento que está no topo
         elements[topIndex] = null; //Null na posição que foi ocupada
-<<<<<<< HEAD
-        topIndex--; 
-=======
         topIndex--;
->>>>>>> 2761991d0af8238eae4b6f6ee704b8995ad04092
         return element; //Retorna o elemento que foi removido
     }
 
