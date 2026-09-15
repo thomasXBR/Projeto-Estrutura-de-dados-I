@@ -1,4 +1,3 @@
-
 package estruturas;
 
 
@@ -19,8 +18,6 @@ public class ArrayStack<E> implements MyStack<E>{
             throw new IllegalStateException("Pilha Cheia"); //Se estver a pilha está cheia
         }
         topIndex++;
-
-        elements[topIndex] = element; //Coloca o novo elemento na posição indicada 
 
         elements[topIndex] = element; //Coloca o novo elemento na posição indicada
     }
