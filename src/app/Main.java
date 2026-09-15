@@ -59,11 +59,17 @@ public class Main
                     Solicitacao novaSolicitacao = new Solicitacao(codigo, nome, descricao, categoria, prioridade);
                     filaDeEspera.enqueue(novaSolicitacao);
 
+                    // Cria uma cópia exata do ticket para mandar pro histórico com o status "CADASTRO"
+                    Solicitacao copiaCadastro = new Solicitacao(codigo, nome, descricao, categoria, prioridade);
+                    Operacao opCadastro = new Operacao("CADASTRO", copiaCadastro);
+
+                    // Insere a operação com a cópia no topo da pilha
+                    historico.push(opCadastro);
                     System.out.println("Solicitação cadastrada!");
                     break;
 
                 case 2:
-                    // Checa se a fila de solicitalções está fazia antes de mostrar a próxima solicitação
+                    // Checa se a fila de solicitações está fazia antes de mostrar a próxima solicitação
                     if (!filaDeEspera.isEmpty()) {
                         System.out.println("Próxima solicitação: " + filaDeEspera.front());
                     } else {
@@ -72,6 +78,26 @@ public class Main
                     break;
 
                 case 3:
+                    // Verifica apenas se a fila tem clientes aguardando
+                    if (!filaDeEspera.isEmpty())
+                    {
+
+                        // 1. Remove o cliente do início da fila
+                        Solicitacao atendida = filaDeEspera.dequeue();
+
+                        atendida.setStatus("CONCLUÍDA");
+
+                        // 2. Empacota a solicitação dentro de uma nova "Operacao"
+                        Operacao opAtendimento = new Operacao("ATENDIMENTO", atendida);
+
+                        // 3. Registra a operação no topo do histórico
+                        historico.push(opAtendimento);
+
+                        System.out.println("Solicitação " + atendida.getCodigo() + " atendida com sucesso!");
+
+                    } else {
+                        System.out.println("Aviso: Não há nenhuma solicitação aguardando atendimento.");
+                    }
                     break;
 
                 case 4:
@@ -121,6 +147,7 @@ public class Main
                         {
                             // 1. Tira do topo, que já sai da mais recente para a mais Operacao op = historico.pop() antiga
                             // 2. Imprime a operação
+                            Operacao op = historico.pop();
                             System.out.println(op);
                             auxiliar.push(op);
                         }
@@ -154,7 +181,7 @@ public class Main
                         else
                         {
                             // Volta o status e coloca a solicitação na frente da fila alvo.setStatus("AGUARDANDO");
-                            alvo.setStatus(null);
+                            alvo.setStatus("AGUARDANDO");
                             MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>();
                             novaFila.enqueue(alvo);
                             while (!filaDeEspera.isEmpty())
