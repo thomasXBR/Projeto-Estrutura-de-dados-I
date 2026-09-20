@@ -69,6 +69,7 @@ public class Main
                     break;
 
                 case 2:
+                    // Retorna o front() da fila
                     Solicitacao proxima = central.consultarProxima();
 
                     if (proxima == null)
@@ -101,6 +102,7 @@ public class Main
                     break;
 
                 case 6:
+                    // Retorna a última operação
                     Operacao ultima = central.consultarUltimaOperacao();
 
                     if (ultima == null)
@@ -110,10 +112,12 @@ public class Main
                     break;
 
                 case 7:
+                    // Lista o histórico (operações e solicitações)
                     System.out.println(central.listarHistorico());
                     break;
 
                 case 8:
+                    // Chama a função removerDaFila() da Central
                     String resultado = central.desfazerUltimaOperacao();
 
                     if (resultado == null)
@@ -123,10 +127,12 @@ public class Main
                     break;
 
                 case 0:
+                    // Encerra o programa
                     System.out.println("Encerrando o sistema...");
                     break;
 
                 default:
+                    // Mensagem seguida pelo menu caso o usuário digite um número fora do intervalo [0,8]
                     System.out.println("Por favor, digite uma opção válida.");
                     break;
             }

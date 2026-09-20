@@ -17,7 +17,7 @@ public class CentralAtendimento {
     private static final int CAPACIDADE_FILA = 10;
 
     private MyQueue<Solicitacao> filaDeEspera;
-    private MyStak<Operacao> historico;
+    private MyStack<Operacao> historico;
 
     public CentralAtendimento(){
         filaDeEspera = new CircularArrayQueue<>();
@@ -51,7 +51,7 @@ public class CentralAtendimento {
         }
 
         Solicitacao atendida = filaDeEspera.dequeue();
-        atenida.setStatus(CONCLUIDA);
+        atendida.setStatus(CONCLUIDA);
         historico.push(new Operacao(ATENDIMENTO, atendida));
 
         return atendida;
