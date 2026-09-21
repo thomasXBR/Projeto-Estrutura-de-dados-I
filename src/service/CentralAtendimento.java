@@ -121,13 +121,13 @@ public class CentralAtendimento {
 
         if (CADASTRO.equals(ultima.getTipo())){
             removerDaFila(alvo.getCodigo());
-            return "Cadastro da Solicitação" + alvo.getCodigo() + "desfeito";
+            return "Cadastro da Solicitação " + alvo.getCodigo() + " desfeito";
         }
 
         if (ATENDIMENTO.equals(ultima.getTipo())){
             alvo.setStatus(AGUARDANDO);
             devolverParaFrenteDaFila(alvo);
-            return "Atendimento da Solicitação" + alvo.getCodigo() + "desfeito";
+            return "Atendimento da Solicitação " + alvo.getCodigo() + " desfeito";
         }
         return "Operação não reconhecida";
     }
