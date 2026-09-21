@@ -55,7 +55,7 @@ public class CentralAtendimento {
         }
 
         Solicitacao atendida = filaDeEspera.dequeue(); //Remove o primeiro elemento da fila
-        atenida.setStatus(CONCLUIDA); //Muda o status após ser atendida
+        atendida.setStatus(CONCLUIDA); //Muda o status após ser atendida
         historico.push(new Operacao(ATENDIMENTO, atendida)); //Informa que a solicitação foi atendida e coloca na pilha
 
         return atendida; // retorna a solicitação atendida
