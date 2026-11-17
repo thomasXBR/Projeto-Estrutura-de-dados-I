@@ -2,6 +2,7 @@ package app;
 
 import java.util.Scanner;
 
+import model.Atendimento
 import model.Solicitacao;
 import model.Operacao;
 import service.CentralAtendimento; // Chamada de funções da central nos cases da main
@@ -17,17 +18,33 @@ public class Main
         do {
             // MENU
             System.out.println("===============================\n" +
-                    "CENTRAL DE ATENDIMENTO" +
+                    "CENTRAL DE ATENDIMENTO E SEVIÇOS" +
                     "\n===============================" +
                     "\n\n" +
+                    "ATENDIMENTO\n"+
                     "1 - Cadastrar nova solicitação\n" +
                     "2 - Consultar próxima solicitação\n" +
                     "3 - Atender próxima solicitação\n" +
                     "4 - Exibir fila de solicitações\n" +
                     "5 - Exibir quantidade de solicitações\n" +
+                    "OPERAÇÕES\n"+
                     "6 - Consultar última operação realizada\n" +
                     "7 - Exibir histórico de operações\n" +
                     "8 - Desfazer última operação\n" +
+                    "CADASTRO GERAL\n"+
+                    "9 - Exibir todas as solicitações\n" +
+                    "10 - Pesquisar solicitação por código\n" +
+                    "11 - Remover solicitação\n" +
+                    "12 - Exibir solicitações por status\n" +
+                    "13 - Exibir solicitações por categoria\n" +
+                    "HISTÓRICO DE ATENDIMENTOS\n" +
+                    "14 - Exibir do primeiro ao último\n" +
+                    "15 - Exibir do último ao primeiro\n" +
+                    "16 - Navegar pelo histórico\n" +
+                    "17 - Pesquisar atendimento\n" +
+                    "RELATÓRIOS\n" +
+                    "18 - Exibir resumo do sistema\n" +
+                               
                     "0 - Encerrar\n");
             System.out.print(">> ");
             resp = s.nextInt();
