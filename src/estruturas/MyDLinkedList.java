@@ -1,9 +1,12 @@
 package estruturas;
 
+import model.Solicitacao;
+
 public class MyDLinkedList<E> implements MyLinkedList<E>{
     private int size; //Guarda a quantidade de elementos existentes na lista
     private DNode<E> header; //Nó sentinela do início (não armazena elemento válido)
     private DNode<E> trailer; //Nó sentinela do final (não armazena elemento válido)
+    private DNode<E> atual;
 
     public MyDLinkedList(){ //Construtor da lista
         //Cria os dois nós sentinelas (lista não possui elementos no começo)
@@ -97,14 +100,122 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
         temp = header;
         header = trailer;
         trailer = temp;
+
+        // Reposiciona o ponteiro de navegação para o novo início da lista
+        if (!isEmpty())
+            atual = header.getNext();
+        else
+            atual = null;
     }
 
-    public void imprime(){ //Exibe todos os elementos da lista, do início ao fim
-        DNode<E> no = header.getNext(); //Começa pelo primeiro elemento verdadeiro
-        while (no.getNext() != null) { //Continua enquanto não chegar ao trailer
-            System.out.print(no.getElement() + " "); //Mostra o elemento armazenado
-            no = no.getNext(); //Avança para o próximo nó
+    public void imprime()
+    {
+        DNode<E> no = header.getNext();
+        while (no != trailer)
+        {
+            System.out.print(no.getElement() + " ");
+            no = no.getNext();
         }
         System.out.println();
+    }
+
+    public void imprimeReverso()
+    {
+        DNode<E> no = trailer.getPrev();
+        while (no.getPrev() != null)
+        {
+            System.out.println(no.getElement());
+            no = no.getPrev();
+        }
+        System.out.println();
+    }
+
+    public E buscarPorCodigo(int codigo)
+    {
+        // Começa pelo primeiro nó verdadeiro da lista.
+        DNode<E> atual = header.getNext();
+
+        // Percorre até chegar ao trailer.
+        while (atual != trailer)
+        {
+            // Pega o objeto armazenado no nó atual.
+            E elemento = atual.getElement();
+
+            // Converte o elemento para Atendimento.
+            Solicitacao s = (Solicitacao) elemento;
+
+            // Acessa a solicitação armazenada no atendimento
+            // e verifica se o código é igual ao procurado.
+            if (s.getCodigo() == codigo)
+                return elemento;
+
+            // Se não encontrar, avança para o próximo nó.
+            atual = atual.getNext();
+        }
+
+        // Se percorrer toda a lista e não encontrar, retorna null.
+        return null;
+    }
+
+    public E removerPorCodigo(int codigo)
+    {
+        DNode<E> cursor = header.getNext();
+
+        while (cursor != trailer) {
+            Solicitacao s = (Solicitacao) cursor.getElement();
+
+            if (s.getCodigo() == codigo) {
+                // Se o nó removido for o mesmo da navegação, avança ou recua 'this.atual'
+                if (this.atual == cursor) {
+                    if (cursor.getNext() != trailer) {
+                        this.atual = cursor.getNext();
+                    } else if (cursor.getPrev() != header) {
+                        this.atual = cursor.getPrev();
+                    } else {
+                        this.atual = null;
+                    }
+                }
+                return remove(cursor);
+            }
+            cursor = cursor.getNext();
+        }
+        return null;
+    }
+
+    public E iniciarNavegacao() {
+        if (isEmpty()) {
+            atual = null;
+            return null;
+        }
+        atual = header.getNext();
+        return atual.getElement();
+    }
+
+    public E navegarProximo() {
+        if (isEmpty()) return null;
+        if (atual == null || atual == header || atual == trailer) {
+            return iniciarNavegacao();
+        }
+        if (atual.getNext() != trailer) {
+            atual = atual.getNext();
+            return atual.getElement();
+        } else {
+            System.out.println("Não existe atendimento subsequente.");
+            return atual.getElement();
+        }
+    }
+
+    public E navegarAnterior() {
+        if (isEmpty()) return null;
+        if (atual == null || atual == header || atual == trailer) {
+            return iniciarNavegacao();
+        }
+        if (atual.getPrev() != header) {
+            atual = atual.getPrev();
+            return atual.getElement();
+        } else {
+            System.out.println("Não existe atendimento anterior.");
+            return atual.getElement();
+        }
     }
 }
