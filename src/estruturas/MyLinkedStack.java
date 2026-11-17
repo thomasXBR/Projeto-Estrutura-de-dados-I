@@ -10,6 +10,16 @@ public class MyLinkedStack<E> implements MyStack<E>{
     }
 
     @Override
+    public boolean isEmpty (){ //Verifica se a pilha está vazia
+        return size == 0; //Se o size é zero, não existem elementos
+    }
+
+    @Override
+    public int size(){ //Retorna a quantidade de elementos
+        return size;
+    }
+
+    @Override
     public void push(E element){ //Inserir elemento no topo
         Node<E> novo = new Node<>(element, topNode); //Novo nó contendo o elemento recebido
         topNode = novo; //Novo nó é o topo da pilha
@@ -35,13 +45,4 @@ public class MyLinkedStack<E> implements MyStack<E>{
         return topNode.getElement(); //Retorna o elemento do topo sem removê-lo
     }
 
-    @Override
-    public boolean isEmpty (){ //Verifica se a pilha está vazia
-        return size == 0; //Se o size é zero, não existem elementos
-    }
-
-    @Override
-    public int size(){ //Retorna a quantidade de elementos
-        return size; //Retorna a quantidade atual
-    }
 }

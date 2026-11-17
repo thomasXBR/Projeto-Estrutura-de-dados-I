@@ -12,6 +12,16 @@ public class MyLinkedQueue<E> implements MyQueue<E>{
     }
 
     @Override
+    public boolean isEmpty(){ //Verifica se a fila está vazia
+        return size == 0; //size zero, fila vazia
+    }
+
+    @Override
+    public int size(){ //Retorna a quantidade de elementos
+        return size;
+    }
+
+    @Override
     public void enqueue(E element){ //Insere elemento no final da fila
         Node<E> novo = new Node<>(element, null); //Cria novo nó contendo o elemento recebido
         if (isEmpty()){ //Verifica se a fila está vazia
@@ -45,13 +55,4 @@ public class MyLinkedQueue<E> implements MyQueue<E>{
         return frontNode.getElement(); //Retorna o elemento que está no início
     }
 
-    @Override
-    public boolean isEmpty(){ //Verifica se a fila está vazia
-        return size == 0; //size zero, fila vazia
-    }
-
-    @Override
-    public int size(){ //Retorna a quantidade de elementos
-        return size;
-    }
 }
