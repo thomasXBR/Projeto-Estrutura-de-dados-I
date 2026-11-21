@@ -1,6 +1,7 @@
 package estruturas;
 
 import model.Solicitacao;
+import model.Atendimento;
 
 public class MyDLinkedList<E> implements MyLinkedList<E>{
     private int size; //Guarda a quantidade de elementos existentes na lista
@@ -113,7 +114,7 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
         DNode<E> no = header.getNext();
         while (no != trailer)
         {
-            System.out.print(no.getElement() + " ");
+            System.out.println(no.getElement());
             no = no.getNext();
         }
         System.out.println();
@@ -122,7 +123,7 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
     public void imprimeReverso()
     {
         DNode<E> no = trailer.getPrev();
-        while (no.getPrev() != null)
+        while (no != header)
         {
             System.out.println(no.getElement());
             no = no.getPrev();
@@ -130,30 +131,21 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
         System.out.println();
     }
 
-    public E buscarPorCodigo(int codigo)
-    {
-        // Começa pelo primeiro nó verdadeiro da lista.
-        DNode<E> atual = header.getNext();
+    public E buscarPorCodigo(int codigo) {
+        DNode<E> cursor = header.getNext();
 
-        // Percorre até chegar ao trailer.
-        while (atual != trailer)
-        {
-            // Pega o objeto armazenado no nó atual.
-            E elemento = atual.getElement();
+        while (cursor != trailer) {
+            E elemento = cursor.getElement();
 
-            // Converte o elemento para Atendimento.
-            Solicitacao s = (Solicitacao) elemento;
-
-            // Acessa a solicitação armazenada no atendimento
-            // e verifica se o código é igual ao procurado.
-            if (s.getCodigo() == codigo)
+            if (elemento instanceof Solicitacao && ((Solicitacao) elemento).getCodigo() == codigo) {
                 return elemento;
+            }
+            if (elemento instanceof Atendimento && ((Atendimento) elemento).getCodigo() == codigo) {
+                return elemento;
+            }
 
-            // Se não encontrar, avança para o próximo nó.
-            atual = atual.getNext();
+            cursor = cursor.getNext();
         }
-
-        // Se percorrer toda a lista e não encontrar, retorna null.
         return null;
     }
 
@@ -180,6 +172,23 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
             cursor = cursor.getNext();
         }
         return null;
+    }
+
+    public String buscarPorCategoria(String categoriaBuscada) {
+        DNode<E> cursor = header.getNext();
+        String resultado = "";
+
+        while (cursor != trailer) {
+            Solicitacao s = (Solicitacao) cursor.getElement();
+
+            if (s.getCategoria().equalsIgnoreCase(categoriaBuscada)) {
+                resultado += s + "\n";
+            }
+
+            cursor = cursor.getNext();
+        }
+
+        return resultado;
     }
 
     public E iniciarNavegacao() {
@@ -217,5 +226,16 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
             System.out.println("Não existe atendimento anterior.");
             return atual.getElement();
         }
+    }
+
+    public E get(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Índice inválido: " + index);
+        }
+        DNode<E> cursor = header.getNext();
+        for (int i = 0; i < index; i++) {
+            cursor = cursor.getNext();
+        }
+        return cursor.getElement();
     }
 }

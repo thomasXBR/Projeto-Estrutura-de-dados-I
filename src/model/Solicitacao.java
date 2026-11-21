@@ -23,6 +23,7 @@ public class Solicitacao {
     public int getCodigo() { return codigo; }
     public String getSolicitante() { return solicitante; }
     public String getStatus() { return status; }
+    public String getCategoria() { return categoria; }
     public void setStatus(String status) { this.status = status; }
 
     // Função que exibe no console formatado

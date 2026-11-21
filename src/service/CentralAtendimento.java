@@ -1,11 +1,13 @@
 package service;
 
 import estruturas.MyQueue;
-import estruturas.CircularArrayQueue;
+import estruturas.MyLinkedQueue;
 import estruturas.MyStack;
-import estruturas.ArrayStack;
+import estruturas.MyLinkedStack;
+import estruturas.MyDLinkedList;
 import model.Solicitacao;
 import model.Operacao;
+import model.Atendimento;
 
 public class CentralAtendimento {
     // Tipos de operação
@@ -16,75 +18,78 @@ public class CentralAtendimento {
     public static final String AGUARDANDO = "AGUARDANDO";
     public static final String CONCLUIDA = "CONCLUÍDA";
 
-    private static final int CAPACIDADE_FILA = 10;
-
-    private MyQueue<Solicitacao> filaDeEspera; // fila guarda as solicitações que estão aguardando atendimento
-    private MyStack<Operacao> historico;       // pilha guarda as operações realizadas
+    private MyQueue<Solicitacao> filaDeEspera;
+    private MyStack<Operacao> historico;
+    private MyDLinkedList<Solicitacao> todasSolicitacoes;
+    private MyDLinkedList<Atendimento> historicoAtendimentos;
 
     public CentralAtendimento() {
-        filaDeEspera = new CircularArrayQueue<>(); // Cria a fila que será usada pelo sistema
-        historico = new ArrayStack<>();            // Cria a pilha que será usada pelo histórico
+        filaDeEspera = new MyLinkedQueue<>();
+        historico = new MyLinkedStack<>();
+        todasSolicitacoes = new MyDLinkedList<>();
+        historicoAtendimentos = new MyDLinkedList<>();
     }
 
     // CASE 1
-    // Recebe os dados digitados pelo usuário na main
     public Solicitacao cadastrarSolicitacao(int codigo, String solicitante, String descricao, String categoria, int prioridade) {
-        if (filaEstaCheia()) { // verifica se a fila está cheia
+        // Evita duplicidade de código no cadastro geral
+        if (!todasSolicitacoes.isEmpty() && todasSolicitacoes.buscarPorCodigo(codigo) != null) {
             return null;
         }
 
-        // Cria a solicitação com os dados recebidos
         Solicitacao nova = new Solicitacao(codigo, solicitante, descricao, categoria, prioridade);
-        filaDeEspera.enqueue(nova);                   // coloca a nova solicitação no final da fila
-        historico.push(new Operacao(CADASTRO, nova)); // Registra no histórico
-        return nova;                                  // Retorna a solicitação criada
+        filaDeEspera.enqueue(nova);
+        todasSolicitacoes.addLast(nova);
+        historico.push(new Operacao(CADASTRO, nova));
+        return nova;
     }
 
     // CASE 2
-    public Solicitacao consultarProxima() { // Retorna a primeira solicitação da fila sem remover
-        if (filaDeEspera.isEmpty()) {      // verifica se a fila está vazia
+    public Solicitacao consultarProxima() {
+        if (filaDeEspera.isEmpty()) {
             return null;
         }
-        return filaDeEspera.front();       // consulta o primeiro sem remover
+        return filaDeEspera.front();
     }
 
     // CASE 3
-    public Solicitacao atenderProxima() { // Retira a primeira solicitação da fila
-        if (filaDeEspera.isEmpty()) {     // Verifica se tem alguém para atender
+    public Solicitacao atenderProxima() {
+        if (filaDeEspera.isEmpty()) {
             return null;
         }
 
-        Solicitacao atendida = filaDeEspera.dequeue();        // Remove o primeiro elemento da fila
-        atendida.setStatus(CONCLUIDA);                        // Muda o status após ser atendida
-        historico.push(new Operacao(ATENDIMENTO, atendida));  // Registra no histórico
+        Solicitacao atendida = filaDeEspera.dequeue();
+        atendida.setStatus(CONCLUIDA);
+        historico.push(new Operacao(ATENDIMENTO, atendida));
+        historicoAtendimentos.addLast(new Atendimento(atendida));
 
-        return atendida; // retorna a solicitação atendida
+        return atendida;
     }
 
     // CASE 4
-    public String listarFila() { // Retorna todas as solicitações que aguardam atendimento
+    public String listarFila() {
         if (filaDeEspera.isEmpty()) {
-            return "A fila de espera está vazia";
+            return "A fila de espera está vazia.";
         }
 
         String texto = "\n--- Fila de Solicitações (Aguardando) ---\n";
-        int tamanho = filaDeEspera.size(); // Guarda o tamanho
+        int tamanho = filaDeEspera.size();
 
-        for (int i = 0; i < tamanho; i++) { // Percorre a fila
-            Solicitacao atual = filaDeEspera.dequeue(); // Retira o primeiro elemento
-            texto += (i + 1) + "° da fila: " + atual + "\n"; // Coloca a solicitação no texto
-            filaDeEspera.enqueue(atual); // Coloca o elemento novamente no final
+        for (int i = 0; i < tamanho; i++) {
+            Solicitacao atual = filaDeEspera.dequeue();
+            texto += (i + 1) + "° da fila: " + atual + "\n";
+            filaDeEspera.enqueue(atual);
         }
-        return texto; // Retorna todo o texto
+        return texto;
     }
 
     // CASE 5
-    public int getQuantidadeAguardando() { // Retorna a quantidade de solicitações aguardando na fila
+    public int getQuantidadeAguardando() {
         return filaDeEspera.size();
     }
 
     // CASE 6
-    public Operacao consultarUltimaOperacao() { // Retorna a operação no topo da pilha sem remover
+    public Operacao consultarUltimaOperacao() {
         if (historico.isEmpty()) {
             return null;
         }
@@ -92,21 +97,21 @@ public class CentralAtendimento {
     }
 
     // CASE 7
-    public String listarHistorico() { // Mostra as operações realizadas
+    public String listarHistorico() {
         if (historico.isEmpty()) {
             return "Nenhuma operação registrada até o momento.";
         }
 
         String texto = "\n--- Histórico de Operações ---\n";
-        MyStack<Operacao> auxiliar = new ArrayStack<>(); // Segunda pilha para auxiliar
+        MyStack<Operacao> auxiliar = new MyLinkedStack<>();
 
-        while (!historico.isEmpty()) { // Enquanto houver operações
-            Operacao op = historico.pop(); // Retira a operação do topo
+        while (!historico.isEmpty()) {
+            Operacao op = historico.pop();
             texto += op + "\n";
-            auxiliar.push(op); // Guarda na pilha auxiliar
+            auxiliar.push(op);
         }
 
-        while (!auxiliar.isEmpty()) { // Devolve para a pilha original
+        while (!auxiliar.isEmpty()) {
             historico.push(auxiliar.pop());
         }
 
@@ -114,7 +119,7 @@ public class CentralAtendimento {
     }
 
     // CASE 8
-    public String desfazerUltimaOperacao() { // Desfaz a operação no topo da pilha
+    public String desfazerUltimaOperacao() {
         if (historico.isEmpty()) {
             return null;
         }
@@ -124,21 +129,148 @@ public class CentralAtendimento {
 
         if (CADASTRO.equals(ultima.getTipo())) {
             removerDaFila(alvo.getCodigo());
-            return "Cadastro da Solicitação " + alvo.getCodigo() + " desfeito";
+            todasSolicitacoes.removerPorCodigo(alvo.getCodigo());
+            return "Cadastro da Solicitação " + alvo.getCodigo() + " desfeito.";
         }
 
         if (ATENDIMENTO.equals(ultima.getTipo())) {
             alvo.setStatus(AGUARDANDO);
             devolverParaFrenteDaFila(alvo);
-            return "Atendimento da Solicitação " + alvo.getCodigo() + " desfeito";
+            if (!historicoAtendimentos.isEmpty()) {
+                historicoAtendimentos.removeLast();
+            }
+            return "Atendimento da Solicitação " + alvo.getCodigo() + " desfeito.";
         }
 
-        return "Operação não reconhecida";
+        return "Operação não reconhecida.";
     }
 
-    // Remover da fila
+    // CASE 9
+    public void exibirTodasSolicitacoes() {
+        if (todasSolicitacoes.isEmpty()) {
+            System.out.println("Nenhuma solicitação cadastrada no sistema.");
+            return;
+        }
+        System.out.println("\n--- Todas as Solicitações (Cadastro Geral) ---");
+        todasSolicitacoes.imprime();
+    }
+
+    // CASE 10
+    public Solicitacao pesquisarSolicitacaoPorCodigo(int codigo) {
+        if (todasSolicitacoes.isEmpty()) {
+            return null;
+        }
+        return todasSolicitacoes.buscarPorCodigo(codigo);
+    }
+
+    // CASE 11
+    public Solicitacao removerSolicitacaoPorCodigo(int codigo) {
+        if (todasSolicitacoes.isEmpty()) {
+            return null;
+        }
+        removerDaFila(codigo);
+        return todasSolicitacoes.removerPorCodigo(codigo);
+    }
+
+    // CASE 12
+    public String buscarPorStatus(String statusBuscado) {
+        if (todasSolicitacoes.isEmpty()) {
+            return "Nenhuma solicitação cadastrada no sistema.";
+        }
+
+        String texto = "\n--- Solicitações com status: " + statusBuscado.toUpperCase() + " ---\n";
+        boolean encontrou = false;
+
+        for (int i = 0; i < todasSolicitacoes.size(); i++) {
+            Solicitacao s = todasSolicitacoes.get(i);
+            if (s.getStatus().equalsIgnoreCase(statusBuscado)) {
+                texto += s + "\n";
+                encontrou = true;
+            }
+        }
+
+        if (!encontrou) {
+            return "Nenhuma solicitação encontrada com o status: " + statusBuscado;
+        }
+
+        return texto;
+    }
+
+    // CASE 13
+    public String pesquisarSolicitacaoPorCategoria(String categoria) {
+        if (todasSolicitacoes.isEmpty()) {
+            return "Nenhuma solicitação cadastrada no sistema.";
+        }
+
+        String encontrados = todasSolicitacoes.buscarPorCategoria(categoria);
+
+        if (encontrados.isEmpty()) {
+            return "Nenhuma solicitação encontrada para a categoria: " + categoria;
+        }
+
+        return "\n--- Solicitações na categoria: " + categoria.toUpperCase() + " ---\n" + encontrados;
+    }
+
+    // CASE 14
+    public void exibirAtendimentosPrimeiroAoUltimo() {
+        if (historicoAtendimentos.isEmpty()) {
+            System.out.println("Nenhum atendimento realizado até o momento.");
+            return;
+        }
+        System.out.println("\n--- Histórico de Atendimentos (Primeiro ao Último) ---");
+        historicoAtendimentos.imprime();
+    }
+
+    // CASE 15
+    public void exibirAtendimentosUltimoAoPrimeiro() {
+        if (historicoAtendimentos.isEmpty()) {
+            System.out.println("Nenhum atendimento realizado até o momento.");
+            return;
+        }
+        System.out.println("\n--- Histórico de Atendimentos (Último ao Primeiro) ---");
+        historicoAtendimentos.imprimeReverso();
+    }
+
+    // CASE 16 (Apoio à navegação)
+    public boolean historicoAtendimentosVazio() {
+        return historicoAtendimentos.isEmpty();
+    }
+
+    public Atendimento iniciarNavegacaoAtendimentos() {
+        return historicoAtendimentos.iniciarNavegacao();
+    }
+
+    public Atendimento proximoAtendimento() {
+        return historicoAtendimentos.navegarProximo();
+    }
+
+    public Atendimento atendimentoAnterior() {
+        return historicoAtendimentos.navegarAnterior();
+    }
+
+    // CASE 17
+    public Atendimento pesquisarAtendimentoPorCodigo(int codigo) {
+        if (historicoAtendimentos.isEmpty()) {
+            return null;
+        }
+        return historicoAtendimentos.buscarPorCodigo(codigo);
+    }
+
+    // CASE 18
+    public String gerarResumoSistema() {
+        return "\n===============================" +
+                "\nRESUMO DO SISTEMA" +
+                "\n===============================" +
+                "\nTotal de solicitações cadastradas: " + todasSolicitacoes.size() +
+                "\nSolicitações aguardando na fila:  " + filaDeEspera.size() +
+                "\nAtendimentos concluídos:          " + historicoAtendimentos.size() +
+                "\nOperações na pilha de histórico:  " + historico.size() +
+                "\n===============================\n";
+    }
+
+    // Métodos auxiliares privados da fila
     private void removerDaFila(int codigo) {
-        MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>(); // Cria uma nova fila vazia
+        MyQueue<Solicitacao> novaFila = new MyLinkedQueue<>();
         int tamanho = filaDeEspera.size();
         for (int i = 0; i < tamanho; i++) {
             Solicitacao atual = filaDeEspera.dequeue();
@@ -146,15 +278,14 @@ public class CentralAtendimento {
                 novaFila.enqueue(atual);
             }
         }
-        filaDeEspera = novaFila; // Atualiza a referência
+        filaDeEspera = novaFila;
     }
 
-    // Colocar na frente da fila
     private void devolverParaFrenteDaFila(Solicitacao solicitacao) {
-        MyQueue<Solicitacao> novaFila = new CircularArrayQueue<>();
-        novaFila.enqueue(solicitacao); // Primeiro a solicitação revertida
+        MyQueue<Solicitacao> novaFila = new MyLinkedQueue<>();
+        novaFila.enqueue(solicitacao);
 
-        while (!filaDeEspera.isEmpty()) { // Coloca os outros elementos atrás dela
+        while (!filaDeEspera.isEmpty()) {
             novaFila.enqueue(filaDeEspera.dequeue());
         }
         filaDeEspera = novaFila;
@@ -163,14 +294,6 @@ public class CentralAtendimento {
     // Usados na Main
     public boolean filaEstaVazia() {
         return filaDeEspera.isEmpty();
-    }
-
-    public boolean filaEstaCheia() {
-        return filaDeEspera.size() == CAPACIDADE_FILA;
-    }
-
-    public int getCapacidadeFila() {
-        return CAPACIDADE_FILA;
     }
 
     public boolean historicoEstaVazio() {
