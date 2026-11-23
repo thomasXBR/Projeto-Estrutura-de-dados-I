@@ -84,6 +84,18 @@ public class MySLinkedList<E> implements MyLinkedList<E> {
         System.out.println();
     }
 
+    public E buscarPorIndice(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Índice inválido: " + index);
+        }
+
+        Node<E> atual = head;
+        for (int i = 0; i < index; i++) {
+            atual = atual.getNext();
+        }
+        return atual.getElement();
+    }
+
     // Busca solicitação por código
     public E buscarPorCodigo(int codigo) {
         Node<E> atual = head;
@@ -139,41 +151,5 @@ public class MySLinkedList<E> implements MyLinkedList<E> {
         }
 
         return null;
-    }
-
-    // Filtra solicitações por status
-    public String buscarPorStatus(String statusBuscado) {
-        Node<E> atual = head;
-        String resultado = "";
-
-        while (atual != null) {
-            if (atual.getElement() instanceof Solicitacao) {
-                Solicitacao s = (Solicitacao) atual.getElement();
-                if (s.getStatus().equalsIgnoreCase(statusBuscado)) {
-                    resultado += s + "\n";
-                }
-            }
-            atual = atual.getNext();
-        }
-
-        return resultado;
-    }
-
-    // Filtra solicitações por categoria
-    public String buscarPorCategoria(String categoriaBuscada) {
-        Node<E> atual = head;
-        String resultado = "";
-
-        while (atual != null) {
-            if (atual.getElement() instanceof Solicitacao) {
-                Solicitacao s = (Solicitacao) atual.getElement();
-                if (s.getCategoria().equalsIgnoreCase(categoriaBuscada)) {
-                    resultado += s + "\n";
-                }
-            }
-            atual = atual.getNext();
-        }
-
-        return resultado;
     }
 }

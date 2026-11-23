@@ -1,4 +1,3 @@
-
 package service;
 
 import estruturas.MyQueue;
@@ -146,11 +145,7 @@ public class CentralAtendimento {
         if (CADASTRO.equals(ultima.getTipo())) {
             historico.pop();
             removerDaFila(alvo.getCodigo());
-
-            int indice = buscarIndicePorCodigo(alvo.getCodigo());
-            if (indice >= 0) {
-                todasSolicitacoes.removerPorCodigo(indice);
-            }
+            todasSolicitacoes.removerPorCodigo(alvo.getCodigo());
 
             return "Cadastro da Solicitação " + alvo.getCodigo() + " desfeito.";
         }
@@ -169,7 +164,7 @@ public class CentralAtendimento {
 
             historico.pop();
             alvo.setStatus(AGUARDANDO);
-            alvo.setResponsavelAtendimento(null);
+            alvo.setResponsavelAtendimento("Não atribuído");
             devolverParaFrenteDaFila(alvo);
             historicoAtendimentos.removeLast();
 
@@ -194,33 +189,29 @@ public class CentralAtendimento {
 
     // CASE 10
     public Solicitacao pesquisarSolicitacaoPorCodigo(int codigo) {
-        int indice = buscarIndicePorCodigo(codigo);
-
-        if (indice < 0) {
+        if (todasSolicitacoes.isEmpty()) {
             return null;
         }
 
-        return todasSolicitacoes.buscarPorCodigo(indice);
+        return todasSolicitacoes.buscarPorCodigo(codigo);
     }
 
     // CASE 11
     public Solicitacao removerSolicitacaoPorCodigo(int codigo) {
-        int indice = buscarIndicePorCodigo(codigo);
+        Solicitacao solicitacao = pesquisarSolicitacaoPorCodigo(codigo);
 
-        if (indice < 0) {
+        if (solicitacao == null) {
             return null;
         }
-
-        Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(indice);
 
         // Não permite apagar uma solicitação que já faz parte do histórico concluído
         if (CONCLUIDA.equalsIgnoreCase(solicitacao.getStatus())) {
             return null;
         }
 
-        // Remove da fila, caso ainda esteja aguardando, e do cadastro geral
+        // Remove da fila, caso ainda esteja aguardando, e do cadastro geral pelo código
         removerDaFila(codigo);
-        return todasSolicitacoes.removerPorCodigo(indice);
+        return todasSolicitacoes.removerPorCodigo(codigo);
     }
 
     // CASE 12
@@ -232,9 +223,9 @@ public class CentralAtendimento {
         String texto = "\n--- Solicitações com status: " + statusBuscado.toUpperCase() + " ---\n";
         boolean encontrou = false;
 
-        // Percorre a lista simples e compara o status de cada solicitação
+        // Percorre a lista simples por índice e compara o status de cada solicitação
         for (int i = 0; i < todasSolicitacoes.size(); i++) {
-            Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(i);
+            Solicitacao solicitacao = todasSolicitacoes.buscarPorIndice(i);
 
             if (solicitacao.getStatus().equalsIgnoreCase(statusBuscado)) {
                 texto += solicitacao + "\n";
@@ -258,9 +249,9 @@ public class CentralAtendimento {
         String texto = "\n--- Solicitações na categoria: " + categoria.toUpperCase() + " ---\n";
         boolean encontrou = false;
 
-        // Percorre a lista simples e compara a categoria de cada solicitação
+        // Percorre a lista simples por índice e compara a categoria de cada solicitação
         for (int i = 0; i < todasSolicitacoes.size(); i++) {
-            Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(i);
+            Solicitacao solicitacao = todasSolicitacoes.buscarPorIndice(i);
 
             if (solicitacao.getCategoria().equalsIgnoreCase(categoria)) {
                 texto += solicitacao + "\n";
@@ -357,7 +348,7 @@ public class CentralAtendimento {
     // Retorna -1 quando o código não existe
     private int buscarIndicePorCodigo(int codigo) {
         for (int i = 0; i < todasSolicitacoes.size(); i++) {
-            if (todasSolicitacoes.buscarPorCodigo(i).getCodigo() == codigo) {
+            if (todasSolicitacoes.buscarPorIndice(i).getCodigo() == codigo) {
                 return i;
             }
         }
