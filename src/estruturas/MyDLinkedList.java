@@ -149,25 +149,24 @@ public class MyDLinkedList<E> implements MyLinkedList<E>{
         return null;
     }
 
-    public E removerPorCodigo(int codigo)
-    {
+    public E removerPorCodigo(int codigo) {
         DNode<E> cursor = header.getNext();
 
         while (cursor != trailer) {
-            Solicitacao s = (Solicitacao) cursor.getElement();
-
-            if (s.getCodigo() == codigo) {
-                // Se o nó removido for o mesmo da navegação, avança ou recua 'this.atual'
-                if (this.atual == cursor) {
-                    if (cursor.getNext() != trailer) {
-                        this.atual = cursor.getNext();
-                    } else if (cursor.getPrev() != header) {
-                        this.atual = cursor.getPrev();
-                    } else {
-                        this.atual = null;
+            if (cursor.getElement() instanceof Atendimento) {
+                Atendimento a = (Atendimento) cursor.getElement();
+                if (a.getCodigo() == codigo) {
+                    if (this.atual == cursor) {
+                        if (cursor.getNext() != trailer) {
+                            this.atual = cursor.getNext();
+                        } else if (cursor.getPrev() != header) {
+                            this.atual = cursor.getPrev();
+                        } else {
+                            this.atual = null;
+                        }
                     }
+                    return remove(cursor);
                 }
-                return remove(cursor);
             }
             cursor = cursor.getNext();
         }

@@ -1,73 +1,179 @@
 package estruturas;
 
-public class MySLinkedList<E> implements MyLinkedList<E>{
-    private Node<E> head; //Guarda o primeiro nó da lista
-    private Node<E> tail; //Guarda o último nó da lista
-    private int size; //Guarda a quantidade de elementos existentes
+import model.Solicitacao;
 
-    public MySLinkedList(){ //Construtor da lista
-        this.head = null; //Não existe primeiro nó no começo
-        this.tail = null; //Não existe último nó no começo
-        this.size = 0; //Lista começa vazia
+public class MySLinkedList<E> implements MyLinkedList<E> {
+    private Node<E> head;
+    private Node<E> tail;
+    private int size;
+
+    public MySLinkedList() {
+        head = null;
+        tail = null;
+        size = 0;
     }
 
     @Override
-    public int size(){ //Retorna a quantidade de elementos
+    public int size() {
         return size;
     }
 
-    @Override 
-    public boolean isEmpty(){ //Verifica se a lista está vazia
-        return size == 0; // Se o size é zero, então não existem elementos
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     @Override
-    public E first(){
-        if (isEmpty()) throw new IllegalStateException(); //Verifica se a lista está vazia
-        return head.getElement(); //Retorna o elemento que está no primeiro nó
+    public E first() {
+        if (isEmpty()) {
+            throw new IllegalStateException("Lista vazia");
+        }
+        return head.getElement();
     }
 
     @Override
-    public E last(){
-        if (isEmpty()) throw new IllegalStateException(); //Verifica se a lista está vazia
-        return tail.getElement(); //Retorna o elemento que está no último nó
-    }
-    public Node<E> head(){
-        return head; //Retorna o primeiro nó da lista (Percorre os elementos)
-    }
-
-    @Override
-    public void addFirst(E element){
-        Node<E> novo = new Node<>(element,head); //Cria um novo  nó contendo o elemento que aponta para o antigo primeiro nó
-        head = novo; //Novo nó passa a ser o primeiro da lista
-        if (size == 0)tail = novo; //Se a lista estava vazia, o novo nó também é o último
-        size++; //Aumenta a quantidade de elementos
+    public E last() {
+        if (isEmpty()) {
+            throw new IllegalStateException("Lista vazia");
+        }
+        return tail.getElement();
     }
 
     @Override
-    public void addLast(E element){
-        Node<E> novo = new Node<>(element,null); //Cria um novo nó contendo o elemento, já que é o  último aponta para null
-        if (size == 0){ //Verifica se a lista está vazia
-            head = novo; //Se estiver, o  novo nó é o primeiro
+    public void addFirst(E element) {
+        head = new Node<>(element, head);
+        if (size == 0) {
+            tail = head;
+        }
+        size++;
+    }
+
+    @Override
+    public void addLast(E element) {
+        Node<E> novo = new Node<>(element, null);
+        if (isEmpty()) {
+            head = novo;
         } else {
-            tail.setNext(novo); //Antigo último nó passa a apontar para o novo
+            tail.setNext(novo);
         }
-        tail = novo ; //Atualiza o último nó da lista
-        size++; //Aumenta a quantidade de elementos
+        tail = novo;
+        size++;
     }
 
     @Override
-    public E removeFirst(){
-        if (isEmpty()){ //Verifica se a lista está vazia
-            throw new IllegalStateException();
+    public E removeFirst() {
+        if (isEmpty()) {
+            throw new IllegalStateException("Lista vazia");
         }
-
-        E elemento = head.getElement(); //Guarda o elemento que será removido
-        head = head.getNext(); //Segundo nó passa a ser o primeiro
-        size--; //Diminui a quantidade de elementos
-        if (size == 0){ //Se a lista ficou vazia, o último também passa a ser null
+        E removido = head.getElement();
+        head = head.getNext();
+        size--;
+        if (size == 0) {
             tail = null;
         }
-        return elemento; //Retorna o elemento que foi removido
+        return removido;
+    }
+
+    // Exibe todos os elementos do início ao fim
+    public void imprime() {
+        Node<E> atual = head;
+        while (atual != null) {
+            System.out.println(atual.getElement());
+            atual = atual.getNext();
+        }
+        System.out.println();
+    }
+
+    // Busca solicitação por código
+    public E buscarPorCodigo(int codigo) {
+        Node<E> atual = head;
+        while (atual != null) {
+            if (atual.getElement() instanceof Solicitacao) {
+                Solicitacao s = (Solicitacao) atual.getElement();
+                if (s.getCodigo() == codigo) {
+                    return atual.getElement();
+                }
+            }
+            atual = atual.getNext();
+        }
+        return null;
+    }
+
+    // Remove solicitação por código (início, meio ou fim)
+    public E removerPorCodigo(int codigo) {
+        if (isEmpty()) {
+            return null;
+        }
+
+        Node<E> anterior = null;
+        Node<E> atual = head;
+
+        while (atual != null) {
+            if (atual.getElement() instanceof Solicitacao) {
+                Solicitacao s = (Solicitacao) atual.getElement();
+                if (s.getCodigo() == codigo) {
+                    E removido = atual.getElement();
+
+                    // Caso 1: Remoção do primeiro elemento (head)
+                    if (anterior == null) {
+                        head = atual.getNext();
+                        if (head == null) {
+                            tail = null; // Lista ficou vazia
+                        }
+                    } else {
+                        // Caso 2: Remoção de intermediário ou último
+                        anterior.setNext(atual.getNext());
+                        // Caso 3: Se removeu o último, atualiza tail
+                        if (atual == tail) {
+                            tail = anterior;
+                        }
+                    }
+
+                    atual.setNext(null);
+                    size--;
+                    return removido;
+                }
+            }
+            anterior = atual;
+            atual = atual.getNext();
+        }
+
+        return null;
+    }
+
+    // Filtra solicitações por status
+    public String buscarPorStatus(String statusBuscado) {
+        Node<E> atual = head;
+        String resultado = "";
+
+        while (atual != null) {
+            if (atual.getElement() instanceof Solicitacao) {
+                Solicitacao s = (Solicitacao) atual.getElement();
+                if (s.getStatus().equalsIgnoreCase(statusBuscado)) {
+                    resultado += s + "\n";
+                }
+            }
+            atual = atual.getNext();
+        }
+
+        return resultado;
+    }
+
+    // Filtra solicitações por categoria
+    public String buscarPorCategoria(String categoriaBuscada) {
+        Node<E> atual = head;
+        String resultado = "";
+
+        while (atual != null) {
+            if (atual.getElement() instanceof Solicitacao) {
+                Solicitacao s = (Solicitacao) atual.getElement();
+                if (s.getCategoria().equalsIgnoreCase(categoriaBuscada)) {
+                    resultado += s + "\n";
+                }
+            }
+            atual = atual.getNext();
+        }
+
+        return resultado;
     }
 }

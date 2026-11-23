@@ -1,3 +1,4 @@
+
 package service;
 
 import estruturas.MyQueue;
@@ -5,6 +6,7 @@ import estruturas.MyLinkedQueue;
 import estruturas.MyStack;
 import estruturas.MyLinkedStack;
 import estruturas.MyDLinkedList;
+import estruturas.MySLinkedList;
 import model.Solicitacao;
 import model.Operacao;
 import model.Atendimento;
@@ -20,20 +22,20 @@ public class CentralAtendimento {
 
     private MyQueue<Solicitacao> filaDeEspera;
     private MyStack<Operacao> historico;
-    private MyDLinkedList<Solicitacao> todasSolicitacoes;
+    private MySLinkedList<Solicitacao> todasSolicitacoes;
     private MyDLinkedList<Atendimento> historicoAtendimentos;
 
     public CentralAtendimento() {
         filaDeEspera = new MyLinkedQueue<>();
         historico = new MyLinkedStack<>();
-        todasSolicitacoes = new MyDLinkedList<>();
+        todasSolicitacoes = new MySLinkedList<>();
         historicoAtendimentos = new MyDLinkedList<>();
     }
 
     // CASE 1
     public Solicitacao cadastrarSolicitacao(int codigo, String solicitante, String descricao, String categoria, int prioridade) {
         // Evita duplicidade de código no cadastro geral
-        if (!todasSolicitacoes.isEmpty() && todasSolicitacoes.buscarPorCodigo(codigo) != null) {
+        if (pesquisarSolicitacaoPorCodigo(codigo) != null) {
             return null;
         }
 
@@ -52,15 +54,28 @@ public class CentralAtendimento {
         return filaDeEspera.front();
     }
 
-    // CASE 3
+    // Mantém a chamada antiga disponível, caso seja utilizada em outro ponto do projeto
     public Solicitacao atenderProxima() {
+        return atenderProxima("Não informado");
+    }
+
+    // CASE 3
+    public Solicitacao atenderProxima(String responsavel) {
         if (filaDeEspera.isEmpty()) {
             return null;
         }
 
+        // Retira a primeira solicitação da fila
         Solicitacao atendida = filaDeEspera.dequeue();
+
+        // Atualiza o status e registra quem realizou o atendimento
         atendida.setStatus(CONCLUIDA);
+        atendida.setResponsavelAtendimento(responsavel);
+
+        // Registra a operação para permitir consulta e desfazer
         historico.push(new Operacao(ATENDIMENTO, atendida));
+
+        // Guarda o atendimento concluído na lista duplamente encadeada
         historicoAtendimentos.addLast(new Atendimento(atendida));
 
         return atendida;
@@ -124,21 +139,40 @@ public class CentralAtendimento {
             return null;
         }
 
-        Operacao ultima = historico.pop();
+        // Consulta a última operação sem removê-la ainda
+        Operacao ultima = historico.top();
         Solicitacao alvo = ultima.getSolicitacao();
 
         if (CADASTRO.equals(ultima.getTipo())) {
+            historico.pop();
             removerDaFila(alvo.getCodigo());
-            todasSolicitacoes.removerPorCodigo(alvo.getCodigo());
+
+            int indice = buscarIndicePorCodigo(alvo.getCodigo());
+            if (indice >= 0) {
+                todasSolicitacoes.removerPorCodigo(indice);
+            }
+
             return "Cadastro da Solicitação " + alvo.getCodigo() + " desfeito.";
         }
 
         if (ATENDIMENTO.equals(ultima.getTipo())) {
-            alvo.setStatus(AGUARDANDO);
-            devolverParaFrenteDaFila(alvo);
-            if (!historicoAtendimentos.isEmpty()) {
-                historicoAtendimentos.removeLast();
+            // Não devolve à fila uma solicitação que já foi removida do cadastro geral
+            if (buscarIndicePorCodigo(alvo.getCodigo()) < 0) {
+                return "Não foi possível desfazer: a solicitação não existe mais no cadastro geral.";
             }
+
+            // Confirma que o último registro do histórico corresponde a esta operação
+            if (historicoAtendimentos.isEmpty() ||
+                    historicoAtendimentos.last().getCodigo() != alvo.getCodigo()) {
+                return "Não foi possível desfazer: o histórico de atendimentos não corresponde à operação.";
+            }
+
+            historico.pop();
+            alvo.setStatus(AGUARDANDO);
+            alvo.setResponsavelAtendimento(null);
+            devolverParaFrenteDaFila(alvo);
+            historicoAtendimentos.removeLast();
+
             return "Atendimento da Solicitação " + alvo.getCodigo() + " desfeito.";
         }
 
@@ -151,25 +185,42 @@ public class CentralAtendimento {
             System.out.println("Nenhuma solicitação cadastrada no sistema.");
             return;
         }
+
         System.out.println("\n--- Todas as Solicitações (Cadastro Geral) ---");
+
+        // Exibe todos os elementos da lista simplesmente encadeada
         todasSolicitacoes.imprime();
     }
 
     // CASE 10
     public Solicitacao pesquisarSolicitacaoPorCodigo(int codigo) {
-        if (todasSolicitacoes.isEmpty()) {
+        int indice = buscarIndicePorCodigo(codigo);
+
+        if (indice < 0) {
             return null;
         }
-        return todasSolicitacoes.buscarPorCodigo(codigo);
+
+        return todasSolicitacoes.buscarPorCodigo(indice);
     }
 
     // CASE 11
     public Solicitacao removerSolicitacaoPorCodigo(int codigo) {
-        if (todasSolicitacoes.isEmpty()) {
+        int indice = buscarIndicePorCodigo(codigo);
+
+        if (indice < 0) {
             return null;
         }
+
+        Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(indice);
+
+        // Não permite apagar uma solicitação que já faz parte do histórico concluído
+        if (CONCLUIDA.equalsIgnoreCase(solicitacao.getStatus())) {
+            return null;
+        }
+
+        // Remove da fila, caso ainda esteja aguardando, e do cadastro geral
         removerDaFila(codigo);
-        return todasSolicitacoes.removerPorCodigo(codigo);
+        return todasSolicitacoes.removerPorCodigo(indice);
     }
 
     // CASE 12
@@ -181,10 +232,12 @@ public class CentralAtendimento {
         String texto = "\n--- Solicitações com status: " + statusBuscado.toUpperCase() + " ---\n";
         boolean encontrou = false;
 
+        // Percorre a lista simples e compara o status de cada solicitação
         for (int i = 0; i < todasSolicitacoes.size(); i++) {
-            Solicitacao s = todasSolicitacoes.get(i);
-            if (s.getStatus().equalsIgnoreCase(statusBuscado)) {
-                texto += s + "\n";
+            Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(i);
+
+            if (solicitacao.getStatus().equalsIgnoreCase(statusBuscado)) {
+                texto += solicitacao + "\n";
                 encontrou = true;
             }
         }
@@ -202,13 +255,24 @@ public class CentralAtendimento {
             return "Nenhuma solicitação cadastrada no sistema.";
         }
 
-        String encontrados = todasSolicitacoes.buscarPorCategoria(categoria);
+        String texto = "\n--- Solicitações na categoria: " + categoria.toUpperCase() + " ---\n";
+        boolean encontrou = false;
 
-        if (encontrados.isEmpty()) {
+        // Percorre a lista simples e compara a categoria de cada solicitação
+        for (int i = 0; i < todasSolicitacoes.size(); i++) {
+            Solicitacao solicitacao = todasSolicitacoes.buscarPorCodigo(i);
+
+            if (solicitacao.getCategoria().equalsIgnoreCase(categoria)) {
+                texto += solicitacao + "\n";
+                encontrou = true;
+            }
+        }
+
+        if (!encontrou) {
             return "Nenhuma solicitação encontrada para a categoria: " + categoria;
         }
 
-        return "\n--- Solicitações na categoria: " + categoria.toUpperCase() + " ---\n" + encontrados;
+        return texto;
     }
 
     // CASE 14
@@ -217,6 +281,7 @@ public class CentralAtendimento {
             System.out.println("Nenhum atendimento realizado até o momento.");
             return;
         }
+
         System.out.println("\n--- Histórico de Atendimentos (Primeiro ao Último) ---");
         historicoAtendimentos.imprime();
     }
@@ -227,8 +292,27 @@ public class CentralAtendimento {
             System.out.println("Nenhum atendimento realizado até o momento.");
             return;
         }
+
         System.out.println("\n--- Histórico de Atendimentos (Último ao Primeiro) ---");
         historicoAtendimentos.imprimeReverso();
+    }
+
+    // Consulta o primeiro atendimento registrado no histórico
+    public Atendimento consultarPrimeiroAtendimento() {
+        if (historicoAtendimentos.isEmpty()) {
+            return null;
+        }
+
+        return historicoAtendimentos.first();
+    }
+
+    // Consulta o último atendimento registrado no histórico
+    public Atendimento consultarUltimoAtendimento() {
+        if (historicoAtendimentos.isEmpty()) {
+            return null;
+        }
+
+        return historicoAtendimentos.last();
     }
 
     // CASE 16 (Apoio à navegação)
@@ -253,6 +337,7 @@ public class CentralAtendimento {
         if (historicoAtendimentos.isEmpty()) {
             return null;
         }
+
         return historicoAtendimentos.buscarPorCodigo(codigo);
     }
 
@@ -268,16 +353,31 @@ public class CentralAtendimento {
                 "\n===============================\n";
     }
 
+    // Procura o índice de uma solicitação pelo código na lista simplesmente encadeada
+    // Retorna -1 quando o código não existe
+    private int buscarIndicePorCodigo(int codigo) {
+        for (int i = 0; i < todasSolicitacoes.size(); i++) {
+            if (todasSolicitacoes.buscarPorCodigo(i).getCodigo() == codigo) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     // Métodos auxiliares privados da fila
     private void removerDaFila(int codigo) {
         MyQueue<Solicitacao> novaFila = new MyLinkedQueue<>();
         int tamanho = filaDeEspera.size();
+
         for (int i = 0; i < tamanho; i++) {
             Solicitacao atual = filaDeEspera.dequeue();
+
             if (atual.getCodigo() != codigo) {
                 novaFila.enqueue(atual);
             }
         }
+
         filaDeEspera = novaFila;
     }
 
@@ -288,6 +388,7 @@ public class CentralAtendimento {
         while (!filaDeEspera.isEmpty()) {
             novaFila.enqueue(filaDeEspera.dequeue());
         }
+
         filaDeEspera = novaFila;
     }
 

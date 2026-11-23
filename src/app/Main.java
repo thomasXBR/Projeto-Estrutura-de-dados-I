@@ -1,3 +1,4 @@
+
 package app;
 
 import java.util.Scanner;
@@ -36,19 +37,18 @@ public class Main {
                     "HISTÓRICO DE ATENDIMENTOS\n" +
                     "14 - Exibir do primeiro ao último\n" +
                     "15 - Exibir do último ao primeiro\n" +
-                    "16 - Navegar pelo histórico\n" +
+                    "16 - Consultar e navegar pelo histórico\n" +
                     "17 - Pesquisar atendimento\n" +
                     "RELATÓRIOS\n" +
                     "18 - Exibir resumo do sistema\n" +
                     "0 - Encerrar\n");
-            System.out.print(">> ");
-            resp = s.nextInt();
+
+            // Lê a opção do menu tratando entradas que não sejam números
+            resp = lerInteiro(s, ">> ");
 
             switch (resp) {
                 case 1:
-                    System.out.print("Digite o código da solicitação: ");
-                    int codigo = s.nextInt();
-                    s.nextLine();
+                    int codigo = lerInteiro(s, "Digite o código da solicitação: ");
 
                     System.out.print("Nome do solicitante: ");
                     String nome = s.nextLine();
@@ -59,8 +59,7 @@ public class Main {
                     System.out.print("Categoria: ");
                     String categoria = s.nextLine();
 
-                    System.out.print("Prioridade: ");
-                    int prioridade = s.nextInt();
+                    int prioridade = lerInteiro(s, "Prioridade: ");
 
                     Solicitacao nova = central.cadastrarSolicitacao(codigo, nome, descricao, categoria, prioridade);
 
@@ -68,6 +67,7 @@ public class Main {
                         System.out.println("Aviso: não foi possível cadastrar (código já existente ou inválido).");
                     else
                         System.out.println("Solicitação cadastrada! " + nova);
+
                     break;
 
                 case 2:
@@ -77,15 +77,24 @@ public class Main {
                         System.out.println("Aviso: nenhuma solicitação foi cadastrada na fila!");
                     else
                         System.out.println("Próxima solicitação: " + proxima);
+
                     break;
 
                 case 3:
-                    Solicitacao atendida = central.atenderProxima();
+                    System.out.print("Nome do responsável pelo atendimento: ");
+                    String responsavel = s.nextLine();
+
+                    if (responsavel.trim().isEmpty()) {
+                        responsavel = "Não informado";
+                    }
+
+                    Solicitacao atendida = central.atenderProxima(responsavel);
 
                     if (atendida == null)
                         System.out.println("Aviso: não há nenhuma solicitação aguardando atendimento.");
                     else
-                        System.out.println("Solicitação " + atendida.getCodigo() + " atendida com sucesso!");
+                        System.out.println("Solicitação " + atendida.getCodigo() + " atendida com sucesso! " + atendida);
+
                     break;
 
                 case 4:
@@ -97,6 +106,7 @@ public class Main {
                         System.out.println("Não há nenhuma solicitação aguardando na fila.");
                     else
                         System.out.println("Quantidade de solicitações aguardando: " + central.getQuantidadeAguardando());
+
                     break;
 
                 case 6:
@@ -106,6 +116,7 @@ public class Main {
                         System.out.println("Nenhuma operação foi realizada ainda.");
                     else
                         System.out.println("Última operação: " + ultima);
+
                     break;
 
                 case 7:
@@ -119,6 +130,7 @@ public class Main {
                         System.out.println("Não há operação para desfazer.");
                     else
                         System.out.println(resultado);
+
                     break;
 
                 case 9:
@@ -126,41 +138,50 @@ public class Main {
                     break;
 
                 case 10:
-                    System.out.print("Insira o código da solicitação que deseja buscar >> ");
-                    int codBusca = s.nextInt();
+                    int codBusca = lerInteiro(s, "Insira o código da solicitação que deseja buscar >> ");
 
                     Solicitacao valida = central.pesquisarSolicitacaoPorCodigo(codBusca);
+
                     if (valida != null)
                         System.out.println("Solicitação encontrada: " + valida);
                     else
                         System.out.println("Solicitação de ID " + codBusca + " não existe.");
+
                     break;
 
                 case 11:
-                    System.out.print("Insira o código da solicitação que deseja remover >> ");
-                    int codBuscaRem = s.nextInt();
+                    int codBuscaRem = lerInteiro(s, "Insira o código da solicitação que deseja remover >> ");
 
                     Solicitacao removida = central.removerSolicitacaoPorCodigo(codBuscaRem);
-                    if (removida != null)
+
+                    if (removida != null) {
                         System.out.println("Solicitação #" + codBuscaRem + " removida com sucesso!");
-                    else
-                        System.out.println("Solicitação de ID " + codBuscaRem + " não existe.");
+                    } else {
+                        Solicitacao existente = central.pesquisarSolicitacaoPorCodigo(codBuscaRem);
+
+                        if (existente != null && "CONCLUÍDA".equalsIgnoreCase(existente.getStatus())) {
+                            System.out.println("Não é possível remover uma solicitação já concluída, pois ela pertence ao histórico de atendimentos.");
+                        } else {
+                            System.out.println("Solicitação de ID " + codBuscaRem + " não existe.");
+                        }
+                    }
+
                     break;
 
                 case 12:
-                    s.nextLine();
                     System.out.print("Digite o status (AGUARDANDO / CONCLUÍDA): ");
                     String statusBusca = s.nextLine();
 
                     System.out.println(central.buscarPorStatus(statusBusca));
+
                     break;
 
                 case 13:
-                    s.nextLine();
                     System.out.print("Digite a categoria da solicitação: ");
                     String categoriaBusca = s.nextLine();
 
                     System.out.println(central.pesquisarSolicitacaoPorCategoria(categoriaBusca));
+
                     break;
 
                 case 14:
@@ -172,37 +193,19 @@ public class Main {
                     break;
 
                 case 16:
-                    if (central.historicoAtendimentosVazio()) {
-                        System.out.println("Nenhum atendimento registrado para navegar.");
-                    } else {
-                        Atendimento atualNav = central.iniciarNavegacaoAtendimentos();
-                        int opNav;
-                        do {
-                            System.out.println("\nAtendimento atual: " + atualNav);
-                            System.out.println("1 - Próximo | 2 - Anterior | 0 - Voltar ao menu");
-                            System.out.print(">> ");
-                            opNav = s.nextInt();
-
-                            if (opNav == 1) {
-                                atualNav = central.proximoAtendimento();
-                            } else if (opNav == 2) {
-                                atualNav = central.atendimentoAnterior();
-                            } else if (opNav != 0) {
-                                System.out.println("Opção de navegação inválida.");
-                            }
-                        } while (opNav != 0);
-                    }
+                    menuHistoricoAtendimentos(s, central);
                     break;
 
                 case 17:
-                    System.out.print("Digite o código do atendimento (solicitação): ");
-                    int codAtend = s.nextInt();
+                    int codAtend = lerInteiro(s, "Digite o código do atendimento (solicitação): ");
 
                     Atendimento atendEncontrado = central.pesquisarAtendimentoPorCodigo(codAtend);
+
                     if (atendEncontrado != null)
                         System.out.println("Atendimento encontrado: " + atendEncontrado);
                     else
                         System.out.println("Nenhum atendimento encontrado com o código #" + codAtend);
+
                     break;
 
                 case 18:
@@ -221,5 +224,80 @@ public class Main {
         } while (resp != 0);
 
         s.close();
+    }
+
+    // Menu para consultar o primeiro/último atendimento ou navegar pelo histórico
+    private static void menuHistoricoAtendimentos(Scanner s, CentralAtendimento central) {
+        if (central.historicoAtendimentosVazio()) {
+            System.out.println("Nenhum atendimento registrado até o momento.");
+            return;
+        }
+
+        int opcao;
+
+        do {
+            System.out.println("\n--- Consultar Histórico de Atendimentos ---");
+            System.out.println("1 - Consultar primeiro atendimento");
+            System.out.println("2 - Consultar último atendimento");
+            System.out.println("3 - Navegar pelo histórico");
+            System.out.println("0 - Voltar ao menu principal");
+
+            opcao = lerInteiro(s, ">> ");
+
+            if (opcao == 1) {
+                Atendimento primeiro = central.consultarPrimeiroAtendimento();
+                System.out.println("Primeiro atendimento: " + primeiro);
+
+            } else if (opcao == 2) {
+                Atendimento ultimo = central.consultarUltimoAtendimento();
+                System.out.println("Último atendimento: " + ultimo);
+
+            } else if (opcao == 3) {
+                navegarHistorico(s, central);
+
+            } else if (opcao != 0) {
+                System.out.println("Opção de histórico inválida.");
+            }
+
+        } while (opcao != 0);
+    }
+
+    // Permite avançar e voltar pelos atendimentos
+    private static void navegarHistorico(Scanner s, CentralAtendimento central) {
+        Atendimento atual = central.iniciarNavegacaoAtendimentos();
+        int opcao;
+
+        do {
+            System.out.println("\nAtendimento atual: " + atual);
+            System.out.println("1 - Próximo | 2 - Anterior | 0 - Voltar");
+
+            opcao = lerInteiro(s, ">> ");
+
+            if (opcao == 1) {
+                atual = central.proximoAtendimento();
+
+            } else if (opcao == 2) {
+                atual = central.atendimentoAnterior();
+
+            } else if (opcao != 0) {
+                System.out.println("Opção de navegação inválida.");
+            }
+
+        } while (opcao != 0);
+    }
+
+    // Lê um número inteiro sem encerrar o programa quando o usuário digita letras
+    private static int lerInteiro(Scanner s, String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            String entrada = s.nextLine();
+
+            try {
+                return Integer.parseInt(entrada.trim());
+
+            } catch (NumberFormatException e) {
+                System.out.println("Valor inválido. Digite um número inteiro.");
+            }
+        }
     }
 }
